@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from bt_servant_engine.adapters.web_messaging import WebMessagingAdapter
 from bt_servant_engine.apps.api.dependencies import get_services
-from bt_servant_engine.apps.api.routes.webhooks import process_message
+from bt_servant_engine.apps.api.message_processor import process_message
 from bt_servant_engine.core.logging import get_logger
 from bt_servant_engine.core.models import UserMessage
 from bt_servant_engine.services import ServiceContainer
