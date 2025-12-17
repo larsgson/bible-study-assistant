@@ -13,13 +13,14 @@ from bt_servant_engine.apps.api.routes import (
     admin_datastore,
     admin_logs,
     admin_status_messages,
+    chat,
     health,
     webhooks,
 )
 from bt_servant_engine.core.logging import get_logger
+from bt_servant_engine.services import ServiceContainer, runtime
 from bt_servant_engine.services.brain_orchestrator import create_brain
-from bt_servant_engine.services import ServiceContainer
-from bt_servant_engine.services import runtime
+
 from .state import get_brain, set_brain
 
 logger = get_logger(__name__)
@@ -59,6 +60,7 @@ def create_app(services: ServiceContainer | None = None) -> FastAPI:
     app.include_router(admin_logs.router)
     app.include_router(admin_status_messages.router)
     app.include_router(admin_datastore.router)
+    app.include_router(chat.router)
     app.include_router(webhooks.router)
     return app
 
