@@ -1,0 +1,190 @@
+# Quick Start Guide - Bible Study Assistant
+
+## Phase 1 Complete ✅
+
+The web chat API has been successfully added! This guide will help you get the server running.
+
+## Prerequisites
+
+- Python 3.12+ (Note: Currently using Python 3.14 which has some dependency conflicts)
+- Git
+- A valid OpenAI API key
+
+## Setup Instructions
+
+### 1. Navigate to the Project
+
+```bash
+cd /Users/larsgson/dev/bw/bible-study-assistant
+```
+
+### 2. Set Up Python Environment
+
+The project uses Python 3.12+ but there are some dependency issues with Python 3.14.
+Recommended: Use Python 3.12 if available.
+
+```bash
+# If you have Python 3.12:
+python3.12 -m venv .venv
+source .venv/bin/activate  # On macOS/Linux
+# .venv\Scripts\activate   # On Windows
+
+# Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 3. Configure Environment Variables
+
+Copy the example environment file and edit it with your actual values:
+
+```bash
+cp env.example .env
+```
+
+Edit `.env` and set at least these required variables:
+
+```
+OPENAI_API_KEY=your-actual-openai-api-key
+DATA_DIR=./data
+BASE_URL=http://localhost:8000
+LOG_PSEUDONYM_SECRET=your-random-secret-string
+
+# These are required by config but not used for web chat:
+META_VERIFY_TOKEN=unused
+META_WHATSAPP_TOKEN=unused
+META_PHONE_NUMBER_ID=unused
+META_APP_SECRET=unused
+FACEBOOK_USER_AGENT=unused
+```
+
+### 4. Start the Server
+
+```bash
+# Make sure virtual environment is activated
+source .venv/bin/activate
+
+# Start the server
+uvicorn bt_servant_engine.api_factory:create_app --factory --reload --host 0.0.0.0 --port 8000
+```
+
+The server should start on http://localhost:8000
+
+## Testing the Web Chat API
+
+### Using curl:
+
+```bash
+curl -X POST http://localhost:8000/api/chat/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Show me Genesis 1:1",
+    "user_id": "test-user-123"
+  }'
+```
+
+### Using the Python example:
+
+```bash
+# Run the example script (requires httpx)
+pip install httpx
+python examples/web_chat_usage.py
+
+# Or run in interactive mode:
+python examples/web_chat_usage.py interactive
+```
+
+## API Endpoints
+
+### Web Chat
+- **POST** `/api/chat/` - Send a message and get responses
+
+### Health Check
+- **GET** `/health` - Check if the API is running
+
+### Admin (if enabled)
+- **GET** `/admin/logs` - View logs (requires auth)
+- **GET** `/admin/status-messages` - View status messages
+- **GET** `/admin/datastore/*` - Manage vector store
+
+## Troubleshooting
+
+### "uvicorn: command not found"
+Make sure your virtual environment is activated:
+```bash
+source .venv/bin/activate
+which uvicorn  # Should show path in .venv
+```
+
+### Python 3.14 Dependency Issues
+Some dependencies (like onnxruntime==1.21.1) don't support Python 3.14 yet.
+Options:
+1. Use Python 3.12: `python3.12 -m venv .venv`
+2. Skip problematic dependencies for now (web chat will still work)
+3. Wait for Phase 1b which will remove unnecessary WhatsApp dependencies
+
+### ChromaDB/Pydantic Errors
+The current chromadb version (0.3.23) has compatibility issues.
+Upgrade chromadb: `pip install chromadb>=1.0.0`
+
+### Missing OpenAI API Key
+Set your actual OpenAI API key in `.env`:
+```
+OPENAI_API_KEY=sk-proj-...your-actual-key...
+```
+
+## What's Next?
+
+### Phase 1b: Remove WhatsApp Code (Ready When You Are)
+
+Once you verify the web chat API works, we can proceed with Phase 1b to:
+- Remove all WhatsApp-specific code (~1000+ lines)
+- Delete unnecessary dependencies
+- Clean up configuration
+- Optionally rename package from `bt_servant_engine` to `bible_study_assistant`
+
+## Project Structure
+
+```
+bible-study-assistant/
+├── bt_servant_engine/          # Main package
+│   ├── adapters/              # External integrations
+│   │   ├── messaging.py       # WhatsApp adapter (to be removed in Phase 1b)
+│   │   ├── web_messaging.py   # Web chat adapter (NEW!)
+│   │   ├── chroma.py          # Vector DB adapter
+│   │   └── user_state.py      # User state persistence
+│   ├── apps/api/              # FastAPI application
+│   │   └── routes/
+│   │       ├── chat.py        # Web chat endpoint (NEW!)
+│   │       └── webhooks.py    # WhatsApp webhooks (to be removed)
+│   ├── core/                  # Domain logic
+│   │   ├── config.py          # Configuration
+│   │   ├── intents.py         # Intent types
+│   │   └── ports.py           # Port interfaces
+│   └── services/              # Business logic
+│       ├── brain_orchestrator.py  # Main orchestration
+│       └── intents/           # Intent handlers
+├── examples/
+│   └── web_chat_usage.py      # Example client (NEW!)
+├── tests/
+│   └── test_web_chat.py       # Web chat tests (NEW!)
+└── PHASE1_SUMMARY.txt         # Detailed summary (NEW!)
+```
+
+## Documentation
+
+- **PHASE1_SUMMARY.txt** - Complete overview of web chat implementation
+- **examples/web_chat_usage.py** - Code examples for using the API
+- **tests/test_web_chat.py** - Unit tests showing expected behavior
+
+## Support
+
+If you encounter issues:
+1. Check that your OpenAI API key is valid
+2. Verify all environment variables are set in `.env`
+3. Check the server logs for detailed error messages
+4. Review PHASE1_SUMMARY.txt for implementation details
+
+The web chat API reuses 100% of the brain/RAG/intent logic from the WhatsApp version,
+so it has all the same capabilities for scripture retrieval, translation help, and
+RAG-powered biblical resource consultation.

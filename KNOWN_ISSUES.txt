@@ -1,0 +1,65 @@
+# Known Issues - Phase 1
+
+## Python 3.14 Compatibility
+
+The project was originally designed for Python 3.12. Some dependencies have issues with Python 3.14:
+
+1. **onnxruntime==1.21.1** - No Python 3.14 wheels available yet
+2. **chromadb==0.3.23** - Uses old Pydantic BaseSettings location
+
+## Workarounds
+
+### Option 1: Use Python 3.12 (Recommended)
+```bash
+# Install Python 3.12 via Homebrew
+brew install python@3.12
+
+# Create venv with Python 3.12
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Option 2: Install Minimal Dependencies
+For testing the web chat API specifically, you only need:
+```bash
+pip install fastapi uvicorn pydantic pydantic-settings openai httpx
+pip install chromadb>=1.0.0  # Use newer version
+pip install langgraph python-json-logger
+```
+
+### Option 3: Wait for Phase 1b
+Phase 1b will remove WhatsApp-specific dependencies that are causing issues:
+- onnxruntime (used for voice processing)
+- Various Meta API dependencies
+- Voice synthesis libraries
+
+## Testing Without Full Setup
+
+You can still test the code structure and imports:
+```bash
+# Syntax validation
+python3 -m py_compile bt_servant_engine/adapters/web_messaging.py
+python3 -m py_compile bt_servant_engine/apps/api/routes/chat.py
+
+# Run unit tests for just the web chat components
+pytest tests/test_web_chat.py -v
+```
+
+## What Works Now
+
+✅ Code is committed and pushed to GitHub
+✅ Architecture is correct (ports & adapters pattern)
+✅ Unit tests are written
+✅ Example usage code is ready
+✅ Both WhatsApp and Web chat can coexist
+
+## What Needs Full Setup
+
+❌ Running the actual server requires resolving dependency issues
+❌ Integration testing requires OpenAI API key and ChromaDB
+❌ RAG functionality needs bible data sources loaded
+
+## Recommendation
+
+Proceed to Phase 1b now - removing WhatsApp code will also remove the problematic dependencies.
