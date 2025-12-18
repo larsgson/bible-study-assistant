@@ -24,6 +24,8 @@ from bt_servant_engine.core.language import LANGUAGE_OTHER, MessageLanguage
 from bt_servant_engine.core.logging import get_logger
 from bt_servant_engine.services.openai_utils import (
     extract_cached_input_tokens as _extract_cached_input_tokens,
+)
+from bt_servant_engine.services.openai_utils import (
     track_openai_usage,
 )
 from utils.perf import add_tokens
@@ -738,6 +740,7 @@ def determine_query_language(
     query_language = detect_language(client, query, agentic_strength=agentic_strength)
     logger.info("language code %s detected by gpt-4o.", query_language)
     stack_rank_collections = [
+        "bibleproject",
         "knowledgebase",
         "en_resources",
     ]

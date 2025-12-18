@@ -37,3 +37,15 @@ logs/
 node_modules/
 package.json
 package-lock.json
+
+# Temporary documentation and test scripts
+temp_docs/
+temp_scripts/
+
+# BibleProject generated content folders
+imports/tbp/chunks/
+imports/tbp/extracted/
+imports/tbp/files/
+imports/tbp/metadata/
+scripts/imports/
+example-pdfs/

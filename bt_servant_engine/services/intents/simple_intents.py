@@ -47,11 +47,23 @@ def get_capabilities() -> List[Capability]:
             "include_in_boilerplate": True,
         },
         {
+            "intent": IntentType.GET_BIBLE_TRANSLATION_ASSISTANCE,
+            "label": "Biblical themes and concepts",
+            "description": "Explore biblical themes, theology, and concepts from BibleProject and other resources.",
+            "examples": [
+                "What is wisdom according to the Bible?",
+                "Explain the concept of covenant in Scripture.",
+                "Tell me about the Exodus story.",
+            ],
+            "include_in_boilerplate": True,
+        },
+        {
             "intent": IntentType.CONSULT_FIA_RESOURCES,
             "label": "FIA process guidance",
             "description": "Use FIA resources to explain the workflow or apply steps to a passage.",
             "examples": [
                 "What are the steps of the FIA process?",
+                "How do I apply FIA to Romans 8?",
             ],
             "include_in_boilerplate": True,
         },
@@ -199,6 +211,8 @@ FULL_HELP_MESSAGE = build_full_help_message()
 
 FIRST_INTERACTION_MESSAGE = f"""
 Hello! I am the BT Servant. This is our first conversation. Let's work together to understand and translate God's word!
+
+I have access to rich biblical resources including BibleProject videos and study materials to help you explore Scripture deeply.
 
 {BOILER_PLATE_AVAILABLE_FEATURES_MESSAGE}
 """

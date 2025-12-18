@@ -16,6 +16,11 @@ from openai.types.responses.easy_input_message_param import EasyInputMessagePara
 
 from bt_servant_engine.core.intents import IntentType
 from bt_servant_engine.core.logging import get_logger
+from bt_servant_engine.services.bibleproject_helpers import (
+    deduplicate_bibleproject_results,
+    enhance_bibleproject_metadata,
+    get_bibleproject_stats,
+)
 from bt_servant_engine.services.cache_manager import CACHE_SCHEMA_VERSION, get_cache
 from bt_servant_engine.services.openai_utils import track_openai_usage
 
@@ -268,12 +273,28 @@ def query_vector_db(
                     vector_config,
                 )
             )
+        # Enhance BibleProject documents with metadata
+        enhanced_docs = [enhance_bibleproject_metadata(doc) for doc in filtered_docs]
+
+        # Deduplicate BibleProject results from multiple strategies
+        deduped_docs = deduplicate_bibleproject_results(enhanced_docs)
+
+        # Log statistics
+        bp_stats = get_bibleproject_stats(deduped_docs)
+        if bp_stats["has_bibleproject"]:
+            logger.info(
+                "[rag-vector] BibleProject: %d docs from strategies %s",
+                bp_stats["count"],
+                bp_stats.get("strategies", []),
+            )
+
         logger.info(
-            "[rag-vector] retrieved %d docs for query signature %s",
+            "[rag-vector] retrieved %d docs for query signature %s (after dedup: %d)",
             len(filtered_docs),
             cache_key.collections,
+            len(deduped_docs),
         )
-        return {"docs": filtered_docs}
+        return {"docs": deduped_docs}
 
     vector_response, hit = _VECTOR_CACHE.get_or_set(cache_key, _compute_vector)
     if hit:
