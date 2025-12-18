@@ -1,0 +1,100 @@
+================================================================================
+🌐 BIBLE STUDY ASSISTANT - WEB CHAT INTERFACE QUICK START
+================================================================================
+
+> Web demo - derived version of unfoldingWord/bt-servant-engine
+> https://github.com/unfoldingWord/bt-servant-engine
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  ███████╗████████╗ █████╗ ██████╗ ████████╗    ██╗  ██╗███████╗██████╗ ███████╗│
+│  ██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝    ██║  ██║██╔════╝██╔══██╗██╔════╝│
+│  ███████╗   ██║   ███████║██████╔╝   ██║       ███████║█████╗  ██████╔╝█████╗  │
+│  ╚════██║   ██║   ██╔══██║██╔══██╗   ██║       ██╔══██║██╔══╝  ██╔══██╗██╔══╝  │
+│  ███████║   ██║   ██║  ██║██║  ██║   ██║       ██║  ██║███████╗██║  ██║███████╗│
+│  ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝│
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+⚡ QUICK START (3 STEPS)
+================================================================================
+
+1️⃣  START THE SERVER
+   ────────────────────
+   $ ./start_server.sh
+
+   Or manually:
+   $ source .venv/bin/activate
+   $ uvicorn bt_servant_engine.api_factory:create_app --factory --reload
+
+2️⃣  OPEN YOUR BROWSER
+   ────────────────────
+   Navigate to: http://localhost:8000
+
+3️⃣  START CHATTING!
+   ────────────────────
+   Type your Bible study questions and get intelligent responses.
+
+================================================================================
+💬 TRY THESE SAMPLE QUESTIONS
+================================================================================
+
+  "Summarize Titus 1"
+  ↳ Get an AI-generated summary of the passage
+
+  "Show John 3:16–18"
+  ↳ Retrieve and display scripture text
+
+  "Translation challenges for John 1:1?"
+  ↳ Get translation helps and notes
+
+  "Important words in Romans 1"
+  ↳ List key terms and theological concepts
+
+  "What are the steps of the FIA process?"
+  ↳ Get guidance on FIA resources
+
+================================================================================
+✨ FEATURES
+================================================================================
+
+✅ Real-Time Responses       - Get instant answers to Bible study questions
+✅ Intelligent RAG Engine    - Context-aware scripture explanations
+✅ Beautiful UI              - Modern, clean design with smooth animations
+✅ Mobile Friendly           - Works perfectly on phones and tablets
+✅ Typing Indicators         - Visual feedback while processing
+✅ Sample Questions          - Quick-start prompts to get you going
+✅ Session Persistence       - Your user ID saved across visits
+
+================================================================================
+🔗 MORE INFORMATION
+================================================================================
+
+This is a derived version of the BT Servant Engine:
+https://github.com/unfoldingWord/bt-servant-engine
+
+For full documentation:
+  - Architecture details
+  - Intent system documentation
+  - Testing guide
+  - API reference
+  - Contributing guidelines
+
+Visit the original repository above.
+
+================================================================================
+🚀 DEPLOYMENT
+================================================================================
+
+See HOSTING_OPTIONS.md in the root directory for:
+  - Fly.io deployment (recommended)
+  - Render deployment (easiest)
+  - Rate limiting setup (critical!)
+  - Cost management strategies
+
+================================================================================
+
+🎉 HAPPY BIBLE STUDYING! 🎉
+
+================================================================================

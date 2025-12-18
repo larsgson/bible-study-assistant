@@ -1,233 +1,317 @@
-# bt-servant-engine
+# Bible Study Assistant - Web Demo
 
-An AI-powered WhatsApp assistant for Bible translators. The service runs on FastAPI, orchestrates intent handling with LangGraph, and integrates OpenAI models plus ChromaDB-backed resources to answer translation questions in multiple languages.
+> A web-based Bible study assistant adapted from [unfoldingWord/bt-servant-engine](https://github.com/unfoldingWord/bt-servant-engine)
 
----
-
-## Overview
-- **Messaging Surface:** Meta WhatsApp webhooks handled by `bt_servant_engine.apps.api`.
-- **Architecture:** Strict onion/hexagonal layers enforced by Import Linter (core → services → adapters → apps).
-- **Brain:** LangGraph pipeline defined in `bt_servant_engine.services.brain_orchestrator`.
-- **LLM & Retrieval:** OpenAI Responses API + ChromaDB adapters accessed through dependency-injected service container.
-- **Quality Gates:** `scripts/check_repo.sh` runs formatting, linting, typing, security, dependency, and coverage checks with zero suppressions allowed.
+This is a **derived version** that removes WhatsApp functionality and adds a modern web chat interface for Bible study questions. The core intelligence (RAG engine, intent routing, passage analysis) comes from the original BT Servant Engine, with adaptations for web-based interaction.
 
 ---
 
-## Architecture
+## 🔗 Relationship to BT Servant Engine
 
-### Layered Layout
-- **`bt_servant_engine/core`** – Domain models, enums, configuration, logging, and service ports. Pure Python with no infrastructure dependencies.
-- **`bt_servant_engine/services`** – Application logic: LangGraph nodes, preprocessing, intent handlers, passage/response pipelines, progress messaging, and import-linter contracts.
-- **`bt_servant_engine/adapters`** – Infrastructure integrations (ChromaDB, messaging transports, user state persistence, OpenAI client wrappers).
-- **`bt_servant_engine/apps`** – FastAPI application, routes, and request/response DTOs.
-- **`bt_servant_engine/api_factory.py`** – Public entrypoint returning a FastAPI app wired to the default service container.
-- **`bt_servant_engine/bootstrap.py`** – Builds the dependency container that wires ports to adapters. Tests can override this for fakes.
-- **`utils/`** – Shared utilities (pricing, identifiers, perf tracing, etc.) that remain infrastructure-agnostic.
+This repository is derived from **[unfoldingWord/bt-servant-engine](https://github.com/unfoldingWord/bt-servant-engine)**, an AI-powered WhatsApp assistant for Bible translators.
 
-Architectural boundaries are enforced by `.importlinter` contracts and validated automatically via the `lint-imports` check in pre-commit/CI.
+**What's Different Here:**
+- ✅ **Web chat interface** instead of WhatsApp
+- ✅ **Browser-based UI** (static/index.html)
+- ✅ **Simplified deployment** for public demos
+- ❌ **No WhatsApp integration** (removed Meta API dependencies)
+- ❌ **No voice processing** (removed Deepgram/Twilio)
 
-### Dependency Wiring
-```text
-FastAPI (apps) → Services → Core
-           ↘         ↘
-         Adapters ← Ports (core)
-```
-- Applications only talk to services and ports.
-- Services depend on core models/ports and call adapters through injected dependencies.
-- Adapters implement the core ports and encapsulate all IO (Meta, Chroma, storage, OpenAI).
+**What's the Same:**
+- ✅ Same RAG engine and intent routing
+- ✅ Same Bible data and translation helps
+- ✅ Same LangGraph orchestration
+- ✅ Same core architecture (onion/hexagonal)
+
+**For full documentation, tests, and examples**, see the **[original repository](https://github.com/unfoldingWord/bt-servant-engine)**.
 
 ---
 
-## LangGraph Decision Flow
-The brain graph processes each inbound WhatsApp message through a series of deterministic steps. Mermaid rendering is supported natively by GitHub, so the flowchart below reflects the live graph assembled in `create_brain()`.
+## 🎯 Future Vision
 
-```mermaid
-flowchart TD
-    start["start_node<br/>Initialize session"] --> lang["determine_query_language_node<br/>Detect message language"]
-    lang --> preprocess["preprocess_user_query_node<br/>Clarify message with context"]
-    preprocess --> intents["determine_intents_node<br/>Classify intents & capture context"]
+This derived version aims to evolve into a **specialized Web Bible Study Assistant** by:
 
-    intents -->|set-response-language| setLang["set_response_language_node"]
-    intents -->|set-agentic-strength| setAgent["set_agentic_strength_node"]
-    intents -->|translation assistance| vector["query_vector_db_node"]
-    vector --> openai["query_open_ai_node"]
+1. **Tailoring the interface** for web-based Bible study (not translation)
+2. **Optimizing intents** for study questions vs. translation work
+3. **Adding web-specific features** (bookmarks, history, annotations)
+4. **Improving UX** for long-form study and exploration
+5. **Keeping the core engine** in sync with upstream improvements
 
-    intents -->|consult-fia-resources| fia["consult_fia_resources_node"]
-    intents -->|passage summary| summary["handle_get_passage_summary_node"]
-    intents -->|keywords| keywords["handle_get_passage_keywords_node"]
-    intents -->|translation helps| helps["handle_get_translation_helps_node"]
-    intents -->|retrieve scripture| retrieve["handle_retrieve_scripture_node"]
-    intents -->|listen to scripture| listen["handle_listen_to_scripture_node"]
-    intents -->|translate scripture| translateIntent["handle_translate_scripture_node"]
-    intents -->|unsupported| unsupported["handle_unsupported_function_node"]
-    intents -->|system info| systemInfo["handle_system_information_request_node"]
-    intents -->|conversation| converse["converse_with_bt_servant_node"]
+The goal is to maintain compatibility with BT Servant Engine's core while building web-specific enhancements.
 
-    setLang --> responses
-    setAgent --> responses
-    openai --> responses
-    fia --> responses
-    summary --> responses
-    keywords --> responses
-    helps --> responses
-    retrieve --> responses
-    listen --> responses
-    translateIntent --> responses
-    unsupported --> responses
-    systemInfo --> responses
-    converse --> responses
+---
 
-    responses["translate_responses_node<br/>Normalize language & assemble output"] -->|needs chunking?| chunk["chunk_message_node<br/>Split oversized replies"]
-    responses -->|ready| finish["Responses ready"]
-    chunk --> finish
+## 🚀 Quick Start
 
-    classDef default fill:#f5f7ff,stroke:#3451b2,stroke-width:1px,color:#1a1a1a;
-    class start,lang,preprocess,intents,setLang,setAgent,vector,openai,fia,summary,keywords,helps,retrieve,listen,translateIntent,unsupported,systemInfo,converse,responses,chunk,finish default;
+### Prerequisites
+
+- Python 3.12+
+- OpenAI API key
+- 20MB disk space (Bible data)
+
+### Local Development
+
+```bash
+# 1. Clone and setup
+git clone <this-repo>
+cd bible-study-assistant
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Configure environment
+cp env.example .env
+# Edit .env and add your OPENAI_API_KEY
+
+# 4. Start the server
+./start_server.sh
+# Or manually: uvicorn bt_servant_engine.api_factory:create_app --factory --reload
+
+# 5. Open browser
+open http://localhost:8000
 ```
 
-Key traits:
-- Intents can be processed sequentially, with lower-priority ones queued for continuation prompts.
-- Every node returns a delta of state updates—no in-place LangGraph mutations.
-- `translate_responses_node` centralizes language normalization and dedupes progress messages before chunking as needed.
+The web interface will load with sample questions to get you started.
 
 ---
 
-## Supported Intents & Behaviors
-- `get-bible-translation-assistance` – Retrieval-augmented answers using ChromaDB + OpenAI.
-- `consult-fia-resources` – Pulls curated translation helps from FIA repositories.
-- `get-passage-summary` – Summarizes canonical passages with faithful prose.
-- `get-passage-keywords` – Surfaces keyword lists for a passage.
-- `get-translation-helps` – Highlights typical translation challenges.
-- `retrieve-scripture` / `listen-to-scripture` – Returns text or audio for passages.
-- `translate-scripture` – Generates draft translations with agentic strength controls.
-- `set-response-language` / `set-agentic-strength` – Session-level configuration.
-- `retrieve-system-information` – Answers questions about capabilities, privacy, etc.
-- `perform-unsupported-function` – Graceful fallback when intent is unrecognized.
-- `converse-with-bt-servant` – General chat when no structured intent matches.
+## 🌐 Web Interface
 
-All intent handlers live in `bt_servant_engine.services.intents` and rely on shared passage/response pipelines.
+### Features
+
+- **Modern chat UI** with typing indicators
+- **Sample questions** for quick start
+- **Session persistence** (localStorage)
+- **Real-time responses** from RAG engine
+- **No login required** (rate limiting recommended for public demos)
+
+### Try These Questions
+
+- "Summarize Titus 1"
+- "Show John 3:16–18"
+- "Translation challenges for John 1:1?"
+- "Important words in Romans 1"
+
+### Customization
+
+The web interface is self-contained in `static/index.html`. Modify CSS, JavaScript, or sample questions directly in that file.
 
 ---
 
-## Running the API Locally
-1. Create a virtual environment and install dependencies:
+## 🎁 What This Repo Adds
+
+### Unique to This Derived Version
+
+| File/Folder | Purpose |
+|-------------|---------|
+| `static/` | Web chat interface (HTML/CSS/JS) |
+| `HOSTING_OPTIONS.md` | Deployment guide (Fly.io, Render) |
+| `bt_servant_engine/adapters/web_messaging.py` | Web messaging adapter |
+| `bt_servant_engine/apps/api/routes/chat.py` | Web chat API endpoint |
+
+### Changed from Original
+
+| Change | Reason |
+|--------|--------|
+| Removed WhatsApp routes | Web-only demo |
+| Removed Twilio/Deepgram | No voice processing needed |
+| Added static file serving | Serve web interface |
+| Simplified configuration | Fewer required env vars |
+
+---
+
+## 📚 Documentation
+
+### Web Demo Specific
+
+- **[HOSTING_OPTIONS.md](HOSTING_OPTIONS.md)** - Deploy to Fly.io or Render
+- **[static/README.md](static/README.md)** - Web interface documentation
+- **[static/QUICKSTART.txt](static/QUICKSTART.txt)** - Visual quick start guide
+
+### Original BT Servant Engine
+
+For comprehensive documentation, see **[bt-servant-engine repository](https://github.com/unfoldingWord/bt-servant-engine)**:
+
+- **Architecture** - Onion/hexagonal layers, dependency injection
+- **Intent System** - 17 supported intents and routing logic
+- **LangGraph Flow** - Decision pipeline and orchestration
+- **Testing** - Full test suite with OpenAI mocks
+- **Quality Gates** - Linting, type checking, coverage requirements
+- **API Reference** - All endpoints and admin routes
+
+---
+
+## 🏗️ Architecture
+
+This derived version maintains the same clean architecture as the original:
+
+```
+apps/api/          → FastAPI routes (web chat endpoint)
+services/          → Intent routing, RAG, orchestration
+adapters/          → ChromaDB, OpenAI, messaging (web adapter)
+core/              → Domain models, configuration
+```
+
+**Key Principle:** Dependencies point inward. Apps depend on services, services depend on core, adapters implement core ports.
+
+See [bt-servant-engine architecture docs](https://github.com/unfoldingWord/bt-servant-engine#architecture) for details.
+
+---
+
+## 🔧 Configuration
+
+### Required Environment Variables
+
+```bash
+OPENAI_API_KEY=sk-...           # Required: OpenAI API access
+LOG_PSEUDONYM_SECRET=<random>   # Required: For PII scrubbing
+DATA_DIR=./data                  # Optional: Data storage location
+```
+
+### Optional Settings
+
+```bash
+BT_SERVANT_LOG_LEVEL=info       # Logging level
+CACHE_ENABLED=true               # Enable response caching
+```
+
+**Note:** WhatsApp-related variables (META_WHATSAPP_TOKEN, etc.) are not needed for web demo.
+
+See `env.example` for full configuration options.
+
+---
+
+## 🚢 Deployment
+
+### Recommended: Fly.io
+
+Already configured with `fly.toml` and `Dockerfile`:
+
+```bash
+# Install Fly CLI
+brew install flyctl
+
+# Deploy (4 commands)
+flyctl auth login
+flyctl deploy
+flyctl secrets set OPENAI_API_KEY=sk-...
+flyctl secrets set LOG_PSEUDONYM_SECRET=$(openssl rand -hex 32)
+
+# Done! https://your-app.fly.dev
+```
+
+### Alternative: Render
+
+Simple web-based deployment:
+
+1. Connect GitHub repo to Render
+2. Add environment variables
+3. Deploy automatically
+
+See **[HOSTING_OPTIONS.md](HOSTING_OPTIONS.md)** for detailed deployment guides.
+
+---
+
+## ⚠️ Important: API Costs & Rate Limiting
+
+**OpenAI API costs can be significant!** Every user query costs ~$0.01-0.03.
+
+### Cost Protection
+
+1. **Set OpenAI spending limits** in dashboard: $10/day recommended
+2. **Implement rate limiting** before public deployment:
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\Scripts\activate
-   scripts/init_env.sh        # Installs runtime + dev tooling
+   pip install slowapi
    ```
-2. Copy `env.example` to `.env` and populate required keys (Meta WhatsApp tokens, `OPENAI_API_KEY`, storage paths, etc.).
-3. Launch the FastAPI app (this factory injects the default service container):
-   ```bash
-   uvicorn bt_servant_engine.api_factory:create_app --factory --reload --host 127.0.0.1 --port 8080
-   ```
-4. For PyCharm or VS Code launch configs, point to the same factory path (`bt_servant_engine.api_factory:create_app`).
+   See [HOSTING_OPTIONS.md](HOSTING_OPTIONS.md) for implementation guide
+3. **Monitor usage** closely in first week
+4. **Expected costs:** $10-50/month for small demos
 
-Use a tunneling tool (e.g., ngrok) to expose `/meta-whatsapp` when testing webhook flows from Meta.
+**Without rate limiting**, a public demo could cost hundreds of dollars per day.
 
 ---
 
-## Quality Gates & Tooling
-- **One command for everything:** `scripts/check_repo.sh`  
-  Runs ruff format/check, pylint, mypy, pyright, lint-imports, bandit, deptry, pip-audit, and pytest with coverage (`--cov-fail-under=70`). Treat any finding as a failure—no suppressions.
-- **Pre-commit hooks:** install with `pre-commit install` and `pre-commit install --hook-type pre-push`. Hooks call the same script.
-- **Import Linter:** validates onion boundaries; run manually with `lint-imports` if you need a fast architecture check.
-- **Perf tracing utilities:** `utils/perf.py` instruments spans/costs for field debugging.
+## 🧪 Testing
+
+### Quick Test (No OpenAI API calls)
+
+```bash
+pytest -q -m "not openai"
+```
+
+### Full Test Suite
+
+See [bt-servant-engine testing docs](https://github.com/unfoldingWord/bt-servant-engine#testing) for comprehensive test documentation.
 
 ---
 
-## Testing
-- Default suite (excludes live OpenAI calls):
-  ```bash
-  pytest --maxfail=1 --disable-warnings -q -m "not openai"
-  ```
-- Full checks before committing:
-  ```bash
-  scripts/check_repo.sh
-  ```
-- Opt-in OpenAI validation (requires real `OPENAI_API_KEY` + `RUN_OPENAI_API_TESTS=1`):
-  ```bash
-  RUN_OPENAI_API_TESTS=1 pytest -q -m openai
-  ```
+## 🤝 Contributing
 
-Pytest marks warnings as errors; update fixtures or add targeted `filterwarnings` entries if necessary.
+This derived version focuses on **web-specific features** for Bible study.
+
+**For core engine improvements** (RAG, intent routing, orchestration), contribute to the upstream repository: **[unfoldingWord/bt-servant-engine](https://github.com/unfoldingWord/bt-servant-engine)**
+
+**For this derived version**, contributions welcome for:
+- Web UI improvements
+- Web-specific features (bookmarks, history, etc.)
+- Deployment configurations
+- Bible study-focused intents
+- Documentation improvements
 
 ---
 
-## WhatsApp & Admin Endpoints
-- **Webhook:** `POST /meta-whatsapp` (signature verification + LangGraph processing). Verification handshake uses `GET /meta-whatsapp`.
-- **Progress messaging:** Status texts sourced from `bt_servant_engine.services.status_messages`.
-- **Admin API:** See `bt_servant_engine.apps.api.routes.admin_datastore` for vector store maintenance (collection merges, document management) secured via bearer token headers when `ENABLE_ADMIN_AUTH=True`. Cache controls are exposed here as well:
-  - `POST /cache/clear` wipes every cache namespace.
-  - `POST /cache/{name}/clear` clears an individual cache (e.g., `passage_summary`).
-  - `GET /cache/stats` reports global cache settings, hit/miss counters, and disk usage.
-  - `GET /cache/{name}?sample_limit=10` inspects a specific cache with recent entry metadata.
-  - Both clear endpoints accept `older_than_days=<float>` to prune only entries older than the cutoff instead of nuking everything.
-- **Status message cache (translations) admin routes:** manage the on-disk status/progress message cache stored in `DATA_DIR/status_messages_data.json` (admin token required).
-  - List all translations: `GET /admin/status-messages`
-  - Get one message’s translations: `GET /admin/status-messages/{message_key}`
-  - Get all translations for a language: `GET /admin/status-messages/language/{language}`
-  - Upsert a translation: `PUT /admin/status-messages/{message_key}/{language}` with body `{"text": "..."}` (cannot overwrite English).
-  - Delete a translation: `DELETE /admin/status-messages/{message_key}/{language}` (cannot delete English).
-  - Delete all translations for a language: `DELETE /admin/status-messages/language/{language}` (cannot delete English).
-  - Examples (assuming `ADMIN_API_TOKEN` in env):
-    ```bash
-    TOKEN=$ADMIN_API_TOKEN
+## 📊 Supported Features
 
-    # List all message keys and their translations
-    curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/admin/status-messages
+Inherited from BT Servant Engine:
 
-    # Get all translations for a single message key
-    curl -H "Authorization: Bearer $TOKEN" \
-      http://localhost:8080/admin/status-messages/EXTRACTING_KEYWORDS
+- ✅ **Passage Summaries** - AI-generated summaries of Bible passages
+- ✅ **Scripture Retrieval** - Fetch and display Bible verses
+- ✅ **Translation Helps** - Translation challenges and notes
+- ✅ **Keywords** - Key terms and theological concepts
+- ✅ **RAG-based Q&A** - Answer questions using Bible resources
+- ✅ **Multi-language** - Respond in user's preferred language
+- ✅ **FIA Resources** - Faithful and Inclusive Access guidance
 
-    # Get all message texts for a specific language across all keys
-    curl -H "Authorization: Bearer $TOKEN" \
-      http://localhost:8080/admin/status-messages/language/am
-
-    # Upsert a translation for one key/language
-    curl -X PUT -H "Authorization: Bearer $TOKEN" \
-      -H "Content-Type: application/json" \
-      -d '{"text":"Amharic text here"}' \
-      http://localhost:8080/admin/status-messages/EXTRACTING_KEYWORDS/am
-
-    # Delete a translation for one key/language
-    curl -X DELETE -H "Authorization: Bearer $TOKEN" \
-      http://localhost:8080/admin/status-messages/EXTRACTING_KEYWORDS/am
-
-    # Delete all translations for a language across every key
-    curl -X DELETE -H "Authorization: Bearer $TOKEN" \
-      http://localhost:8080/admin/status-messages/language/am
-    ```
+See [intent documentation](https://github.com/unfoldingWord/bt-servant-engine) in original repo for details.
 
 ---
 
-## Cache Configuration
-- Defaults: caching is enabled with a disk backend under `${DATA_DIR}/cache`, entries never expire (`TTL=-1`), and a 500 MB cap (per cache) enforced by environment variables.
-- Toggle or tune via env settings (see `bt_servant_engine/core/config.py`):
-  - `CACHE_ENABLED`, `CACHE_BACKEND` (`disk` | `memory`), `CACHE_DISK_MAX_BYTES`
-  - Per-cache toggles (defaults in parentheses): `CACHE_SELECTION_ENABLED` (`false`), `CACHE_SUMMARY_ENABLED` (`true`), `CACHE_KEYWORDS_ENABLED` (`true`), `CACHE_TRANSLATION_HELPS_ENABLED` (`true`), `CACHE_RAG_VECTOR_ENABLED` (`false`), `CACHE_RAG_FINAL_ENABLED` (`false`)
-  - Per-cache TTL/size controls: `CACHE_SELECTION_TTL_SECONDS`, `CACHE_SUMMARY_TTL_SECONDS`, `CACHE_TRANSLATION_HELPS_TTL_SECONDS`, etc. (set to `-1` for no expiry)
-- Admin endpoints (above) can purge or inspect caches without redeploying; deleting the cache directory in `${DATA_DIR}/cache` also resets disk stores.
+## 🔄 Staying in Sync with Upstream
+
+This derived version periodically pulls updates from the original BT Servant Engine to benefit from:
+- Bug fixes
+- Performance improvements
+- New features in core engine
+- Updated Bible data
+
+**Merge strategy:** Cherry-pick core improvements while maintaining web-specific adaptations.
 
 ---
 
-## Data & Resources
-- **Bible passages:** JSON assets under `sources/bible_data`.
-- **Keyword data:** Cached term indexes in `sources/keyword_data`.
-- **Visualizations:** Legacy PNG graphs remain in `visualizations/` for reference, but the authoritative graph lives in the Mermaid diagram above.
+## 📝 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+This is a derived version of [bt-servant-engine](https://github.com/unfoldingWord/bt-servant-engine), which is also MIT licensed.
 
 ---
 
-## Deployment Notes
-- Build images using the existing Dockerfile/entrypoint, which invoke `bt_servant_engine.api_factory:create_app`.
-- CI pipelines (GitHub Actions) run `scripts/check_repo.sh` and pytest coverage; OpenAI tests stay opt-in to avoid external side effects.
+## 🆘 Support
+
+- **Web demo issues:** Open issue in this repository
+- **Core engine issues:** Open issue in [bt-servant-engine](https://github.com/unfoldingWord/bt-servant-engine)
+- **Deployment help:** See [HOSTING_OPTIONS.md](HOSTING_OPTIONS.md)
 
 ---
 
-## Getting Help
-- Review `docs/` for architecture decisions and refactor history (`docs/refactor_plan_revised.md`).
-- `AGENTS.md` tracks ongoing decisions for future collaborators.
-- Use the logging IDs (cid/user_id/trace) printed in the console to correlate webhook requests with OpenAI costs and continuation prompts.
+## 🙏 Acknowledgments
 
-Happy translating!
+This project builds on the excellent work of the [unfoldingWord](https://www.unfoldingword.org/) team and the [bt-servant-engine](https://github.com/unfoldingWord/bt-servant-engine) contributors.
+
+The web adaptation maintains the core intelligence while making it accessible through a browser-based interface.
+
+---
+
+**Ready to try it?** Run `./start_server.sh` and open http://localhost:8000 🚀

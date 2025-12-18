@@ -18,44 +18,49 @@ from bt_servant_engine.core.config import config
 from bt_servant_engine.core.intents import IntentType
 from bt_servant_engine.core.logging import get_logger
 from bt_servant_engine.core.ports import ChromaPort, UserStatePort
-from bt_servant_engine.services.openai_utils import (
-    extract_cached_input_tokens as _extract_cached_input_tokens,
-)
-from bt_servant_engine.services.passage_helpers import (
-    book_patterns as _book_patterns_impl,
-    choose_primary_book as _choose_primary_book_impl,
-    detect_mentioned_books as _detect_mentioned_books_impl,
-)
-from bt_servant_engine.services.response_helpers import (
-    is_protected_response_item as _is_protected_response_item_impl,
-    normalize_single_response as _normalize_single_response_impl,
-    partition_response_items as _partition_response_items_impl,
-    sample_for_language_detection as _sample_for_language_detection_impl,
-)
+from bt_servant_engine.services import runtime
 from bt_servant_engine.services.brain_followups import FollowupConfig, apply_followups
-from bt_servant_engine.services.truncation_notices import build_truncation_notice
 from bt_servant_engine.services.continuation_prompts import INTENT_ACTION_DESCRIPTIONS
-from bt_servant_engine.services.preprocessing import (
-    determine_intents as _determine_intents_impl,
-    determine_intents_structured as _determine_intents_structured_impl,
-    determine_query_language as _determine_query_language_impl,
-    is_affirmative_response_to_continuation as _is_affirmative_response_to_continuation_impl,
-    model_for_agentic_strength as _model_for_agentic_strength,
-    preprocess_user_query as _preprocess_user_query_impl,
-    resolve_agentic_strength as _resolve_agentic_strength,
-    resolve_dev_agentic_mcp as _resolve_dev_agentic_mcp,
-    generate_continuation_actions as _generate_continuation_actions_impl,
+from bt_servant_engine.services.graph_pipeline import (
+    OpenAIQueryDependencies,
+    OpenAIQueryPayload,
 )
-from bt_servant_engine.services.passage_selection import (
-    PassageSelectionDependencies,
-    PassageSelectionRequest,
-    resolve_selection_for_single_book as resolve_selection_for_single_book_impl,
+from bt_servant_engine.services.graph_pipeline import (
+    query_open_ai as query_open_ai_impl,
 )
-from bt_servant_engine.services.intents.simple_intents import (
-    BOILER_PLATE_AVAILABLE_FEATURES_MESSAGE,
-    converse_with_bt_servant as converse_with_bt_servant_impl,
-    handle_system_information_request as handle_system_information_request_impl,
-    handle_unsupported_function as handle_unsupported_function_impl,
+from bt_servant_engine.services.graph_pipeline import (
+    query_vector_db as query_vector_db_impl,
+)
+from bt_servant_engine.services.intent_queue import (
+    clear_queue,
+    has_queued_intents,
+    peek_next_intent,
+)
+from bt_servant_engine.services.intents.fia_intents import (
+    FIA_REFERENCE_CONTENT,
+    FIADependencies,
+    FIARequest,
+)
+from bt_servant_engine.services.intents.fia_intents import (
+    consult_fia_resources as consult_fia_resources_impl,
+)
+from bt_servant_engine.services.intents.passage_intents import (
+    ListenToScriptureRequest,
+    PassageKeywordsRequest,
+    PassageSummaryRequest,
+    RetrieveScriptureRequest,
+)
+from bt_servant_engine.services.intents.passage_intents import (
+    get_passage_keywords as get_passage_keywords_impl,
+)
+from bt_servant_engine.services.intents.passage_intents import (
+    get_passage_summary as get_passage_summary_impl,
+)
+from bt_servant_engine.services.intents.passage_intents import (
+    listen_to_scripture as listen_to_scripture_impl,
+)
+from bt_servant_engine.services.intents.passage_intents import (
+    retrieve_scripture as retrieve_scripture_impl,
 )
 from bt_servant_engine.services.intents.settings_intents import (
     AgenticStrengthDependencies,
@@ -66,40 +71,107 @@ from bt_servant_engine.services.intents.settings_intents import (
     DevAgenticMCPRequest,
     ResponseLanguageDependencies,
     ResponseLanguageRequest,
-    clear_response_language as clear_response_language_impl,
-    set_agentic_strength as set_agentic_strength_impl,
-    set_dev_agentic_mcp as set_dev_agentic_mcp_impl,
-    set_response_language as set_response_language_impl,
+)
+from bt_servant_engine.services.intents.settings_intents import (
     clear_dev_agentic_mcp as clear_dev_agentic_mcp_impl,
 )
-from bt_servant_engine.services.intents.passage_intents import (
-    ListenToScriptureRequest,
-    PassageKeywordsRequest,
-    PassageSummaryRequest,
-    RetrieveScriptureRequest,
-    get_passage_keywords as get_passage_keywords_impl,
-    get_passage_summary as get_passage_summary_impl,
-    listen_to_scripture as listen_to_scripture_impl,
-    retrieve_scripture as retrieve_scripture_impl,
+from bt_servant_engine.services.intents.settings_intents import (
+    clear_response_language as clear_response_language_impl,
+)
+from bt_servant_engine.services.intents.settings_intents import (
+    set_agentic_strength as set_agentic_strength_impl,
+)
+from bt_servant_engine.services.intents.settings_intents import (
+    set_dev_agentic_mcp as set_dev_agentic_mcp_impl,
+)
+from bt_servant_engine.services.intents.settings_intents import (
+    set_response_language as set_response_language_impl,
+)
+from bt_servant_engine.services.intents.simple_intents import (
+    BOILER_PLATE_AVAILABLE_FEATURES_MESSAGE,
+)
+from bt_servant_engine.services.intents.simple_intents import (
+    converse_with_bt_servant as converse_with_bt_servant_impl,
+)
+from bt_servant_engine.services.intents.simple_intents import (
+    handle_system_information_request as handle_system_information_request_impl,
+)
+from bt_servant_engine.services.intents.simple_intents import (
+    handle_unsupported_function as handle_unsupported_function_impl,
 )
 from bt_servant_engine.services.intents.translation_intents import (
     TranslationDependencies,
     TranslationHelpsDependencies,
     TranslationHelpsRequestParams,
     TranslationRequestParams,
+)
+from bt_servant_engine.services.intents.translation_intents import (
     get_translation_helps as get_translation_helps_impl,
+)
+from bt_servant_engine.services.intents.translation_intents import (
     translate_scripture as translate_scripture_impl,
 )
-from bt_servant_engine.services.intents.fia_intents import (
-    FIADependencies,
-    FIARequest,
-    consult_fia_resources as consult_fia_resources_impl,
-    FIA_REFERENCE_CONTENT,
+from bt_servant_engine.services.mcp_agentic import (
+    MCPAgenticDependencies,
+    run_agentic_mcp,
 )
-from bt_servant_engine.services.intent_queue import (
-    clear_queue,
-    has_queued_intents,
-    peek_next_intent,
+from bt_servant_engine.services.openai_utils import (
+    extract_cached_input_tokens as _extract_cached_input_tokens,
+)
+from bt_servant_engine.services.passage_helpers import (
+    book_patterns as _book_patterns_impl,
+)
+from bt_servant_engine.services.passage_helpers import (
+    choose_primary_book as _choose_primary_book_impl,
+)
+from bt_servant_engine.services.passage_helpers import (
+    detect_mentioned_books as _detect_mentioned_books_impl,
+)
+from bt_servant_engine.services.passage_selection import (
+    PassageSelectionDependencies,
+    PassageSelectionRequest,
+)
+from bt_servant_engine.services.passage_selection import (
+    resolve_selection_for_single_book as resolve_selection_for_single_book_impl,
+)
+from bt_servant_engine.services.preprocessing import (
+    determine_intents as _determine_intents_impl,
+)
+from bt_servant_engine.services.preprocessing import (
+    determine_intents_structured as _determine_intents_structured_impl,
+)
+from bt_servant_engine.services.preprocessing import (
+    determine_query_language as _determine_query_language_impl,
+)
+from bt_servant_engine.services.preprocessing import (
+    generate_continuation_actions as _generate_continuation_actions_impl,
+)
+from bt_servant_engine.services.preprocessing import (
+    is_affirmative_response_to_continuation as _is_affirmative_response_to_continuation_impl,
+)
+from bt_servant_engine.services.preprocessing import (
+    model_for_agentic_strength as _model_for_agentic_strength,
+)
+from bt_servant_engine.services.preprocessing import (
+    preprocess_user_query as _preprocess_user_query_impl,
+)
+from bt_servant_engine.services.preprocessing import (
+    resolve_agentic_strength as _resolve_agentic_strength,
+)
+from bt_servant_engine.services.preprocessing import (
+    resolve_dev_agentic_mcp as _resolve_dev_agentic_mcp,
+)
+from bt_servant_engine.services.response_helpers import (
+    is_protected_response_item as _is_protected_response_item_impl,
+)
+from bt_servant_engine.services.response_helpers import (
+    normalize_single_response as _normalize_single_response_impl,
+)
+from bt_servant_engine.services.response_helpers import (
+    partition_response_items as _partition_response_items_impl,
+)
+from bt_servant_engine.services.response_helpers import (
+    sample_for_language_detection as _sample_for_language_detection_impl,
 )
 from bt_servant_engine.services.response_pipeline import (
     ChunkingDependencies,
@@ -107,34 +179,42 @@ from bt_servant_engine.services.response_pipeline import (
     ResponseLocalizationRequest,
     ResponseTranslationDependencies,
     ResponseTranslationRequest,
-    chunk_message as chunk_message_impl,
-    needs_chunking as needs_chunking_impl,
-    reconstruct_structured_text as reconstruct_structured_text_impl,
-    translate_or_localize_response as translate_or_localize_response_impl,
-    translate_text as translate_text_impl,
+)
+from bt_servant_engine.services.response_pipeline import (
     build_translation_queue as build_translation_queue_impl,
+)
+from bt_servant_engine.services.response_pipeline import (
+    chunk_message as chunk_message_impl,
+)
+from bt_servant_engine.services.response_pipeline import (
+    needs_chunking as needs_chunking_impl,
+)
+from bt_servant_engine.services.response_pipeline import (
+    reconstruct_structured_text as reconstruct_structured_text_impl,
+)
+from bt_servant_engine.services.response_pipeline import (
     resolve_target_language as resolve_target_language_impl,
 )
-from bt_servant_engine.services.graph_pipeline import (
-    OpenAIQueryDependencies,
-    OpenAIQueryPayload,
-    query_open_ai as query_open_ai_impl,
-    query_vector_db as query_vector_db_impl,
+from bt_servant_engine.services.response_pipeline import (
+    translate_or_localize_response as translate_or_localize_response_impl,
 )
-from bt_servant_engine.services.translation_helpers import (
-    build_translation_helps_context as build_translation_helps_context_impl,
-    build_translation_helps_messages as build_translation_helps_messages_impl,
-    prepare_translation_helps as prepare_translation_helps_impl,
-)
-from bt_servant_engine.services.mcp_agentic import (
-    MCPAgenticDependencies,
-    run_agentic_mcp,
+from bt_servant_engine.services.response_pipeline import (
+    translate_text as translate_text_impl,
 )
 from bt_servant_engine.services.status_messages import get_effective_response_language
-from bt_servant_engine.services import runtime
+from bt_servant_engine.services.translation_helpers import (
+    build_translation_helps_context as build_translation_helps_context_impl,
+)
+from bt_servant_engine.services.translation_helpers import (
+    build_translation_helps_messages as build_translation_helps_messages_impl,
+)
+from bt_servant_engine.services.translation_helpers import (
+    prepare_translation_helps as prepare_translation_helps_impl,
+)
+from bt_servant_engine.services.truncation_notices import build_truncation_notice
 from utils.bsb import BOOK_MAP as BSB_BOOK_MAP
-from utils.perf import add_tokens
 from utils.identifiers import get_log_safe_user_id
+from utils.perf import add_tokens
 
 # Initialize module-level dependencies
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -706,12 +786,12 @@ def consult_fia_resources(state: Any) -> dict:
 
 
 def chunk_message(state: Any) -> dict:
-    """Chunk oversized responses to respect WhatsApp limits, via LLM or fallback."""
+    """Chunk oversized responses to respect text length limits, via LLM or fallback."""
 
     s = _brain_state(state)
     responses = s["translated_responses"]
     text_to_chunk = responses[0]
-    chunk_max = config.MAX_META_TEXT_LENGTH - 100
+    chunk_max = config.MAX_RESPONSE_TEXT_LENGTH - 100
     request = ChunkingRequest(
         client=open_ai_client,
         text_to_chunk=text_to_chunk,

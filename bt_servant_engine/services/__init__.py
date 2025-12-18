@@ -23,14 +23,12 @@ def build_default_services(
     *,
     chroma_port: Optional[ChromaPort] = None,
     user_state_port: Optional[UserStatePort] = None,
-    messaging_port: Optional[MessagingPort] = None,
 ) -> ServiceContainer:
     """Return a service container with the default intent router wiring."""
     intent_router = IntentRouter()
     return ServiceContainer(
         chroma=chroma_port,
         user_state=user_state_port,
-        messaging=messaging_port,
         intent_router=intent_router,
     )
 
