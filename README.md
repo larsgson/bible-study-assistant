@@ -4,6 +4,19 @@
 
 This is a **derived version** that removes WhatsApp functionality and adds a modern web chat interface for Bible study questions. The core intelligence (RAG engine, intent routing, passage analysis) comes from the original BT Servant Engine, with adaptations for web-based interaction.
 
+## 📚 Integrated Resources
+
+This assistant includes rich biblical content from **[The Bible Project](https://bibleproject.com)**, featuring:
+
+- **1,100+ searchable documents** from BibleProject videos, transcripts, and study materials
+- **Thematic content** covering biblical themes, theology, and concepts
+- **Video references** with direct links and timestamps for deeper exploration
+- **Study notes** on books, passages, and key topics
+
+**Attribution**: BibleProject resources are © [The Bible Project](https://bibleproject.com) and are used with permission. All video content, transcripts, and study materials are created by The Bible Project team.
+
+**Learn More**: Visit [bibleproject.com](https://bibleproject.com) to explore their complete library of videos and resources.
+
 ---
 
 ## 🔗 Relationship to BT Servant Engine
@@ -23,6 +36,11 @@ This repository is derived from **[unfoldingWord/bt-servant-engine](https://gith
 - ✅ Same LangGraph orchestration
 - ✅ Same core architecture (onion/hexagonal)
 
+**What's Enhanced:**
+- ✨ **BibleProject integration** - 1,100+ documents from BibleProject videos and study materials
+- ✨ **Thematic search** - Explore biblical themes with rich video content
+- ✨ **Video references** - Direct links to specific moments in BibleProject videos
+
 **For full documentation, tests, and examples**, see the **[original repository](https://github.com/unfoldingWord/bt-servant-engine)**.
 
 ---
@@ -35,7 +53,8 @@ This derived version aims to evolve into a **specialized Web Bible Study Assista
 2. **Optimizing intents** for study questions vs. translation work
 3. **Adding web-specific features** (bookmarks, history, annotations)
 4. **Improving UX** for long-form study and exploration
-5. **Keeping the core engine** in sync with upstream improvements
+5. **Integrating rich resources** like BibleProject content for deeper exploration
+6. **Keeping the core engine** in sync with upstream improvements
 
 The goal is to maintain compatibility with BT Servant Engine's core while building web-specific enhancements.
 
@@ -82,6 +101,8 @@ The web interface will load with sample questions to get you started.
 ### Features
 
 - **Modern chat UI** with typing indicators
+- **BibleProject content** - 1,100+ documents from videos and study materials
+- **Thematic search** - Explore biblical themes with video references
 - **Sample questions** for quick start
 - **Session persistence** (localStorage)
 - **Real-time responses** from RAG engine
@@ -89,6 +110,12 @@ The web interface will load with sample questions to get you started.
 
 ### Try These Questions
 
+**Biblical Themes & Concepts** (powered by BibleProject):
+- "What is wisdom according to the Bible?"
+- "Explain the concept of covenant in Scripture"
+- "Tell me about the Exodus story"
+
+**Passage Tools**:
 - "Summarize Titus 1"
 - "Show John 3:16–18"
 - "Translation challenges for John 1:1?"
@@ -110,6 +137,9 @@ The web interface is self-contained in `static/index.html`. Modify CSS, JavaScri
 | `HOSTING_OPTIONS.md` | Deployment guide (Fly.io, Render) |
 | `bt_servant_engine/adapters/web_messaging.py` | Web messaging adapter |
 | `bt_servant_engine/apps/api/routes/chat.py` | Web chat API endpoint |
+| `bt_servant_engine/services/bibleproject_helpers.py` | BibleProject integration utilities |
+| `imports/tbp/` | BibleProject resource pipeline and configuration |
+| `scripts/*tbp*.py` | BibleProject data pipeline scripts |
 
 ### Changed from Original
 
@@ -129,6 +159,8 @@ The web interface is self-contained in `static/index.html`. Modify CSS, JavaScri
 - **[HOSTING_OPTIONS.md](HOSTING_OPTIONS.md)** - Deploy to Fly.io or Render
 - **[static/README.md](static/README.md)** - Web interface documentation
 - **[static/QUICKSTART.txt](static/QUICKSTART.txt)** - Visual quick start guide
+- **[imports/tbp/README.md](imports/tbp/README.md)** - BibleProject integration pipeline
+- **[imports/tbp/QUICKSTART.md](imports/tbp/QUICKSTART.md)** - BibleProject quick reference
 
 ### Original BT Servant Engine
 
@@ -149,9 +181,10 @@ This derived version maintains the same clean architecture as the original:
 
 ```
 apps/api/          → FastAPI routes (web chat endpoint)
-services/          → Intent routing, RAG, orchestration
+services/          → Intent routing, RAG, orchestration, BibleProject helpers
 adapters/          → ChromaDB, OpenAI, messaging (web adapter)
 core/              → Domain models, configuration
+imports/tbp/       → BibleProject resources and pipeline
 ```
 
 **Key Principle:** Dependencies point inward. Apps depend on services, services depend on core, adapters implement core ports.
@@ -266,6 +299,9 @@ This derived version focuses on **web-specific features** for Bible study.
 
 Inherited from BT Servant Engine:
 
+- ✅ **BibleProject Content** - 1,100+ documents from videos, transcripts, and study materials
+- ✅ **Biblical Themes** - Explore wisdom, covenant, holiness, and other themes
+- ✅ **Video References** - Direct links to specific moments in BibleProject videos
 - ✅ **Passage Summaries** - AI-generated summaries of Bible passages
 - ✅ **Scripture Retrieval** - Fetch and display Bible verses
 - ✅ **Translation Helps** - Translation challenges and notes
@@ -308,9 +344,13 @@ This is a derived version of [bt-servant-engine](https://github.com/unfoldingWor
 
 ## 🙏 Acknowledgments
 
-This project builds on the excellent work of the [unfoldingWord](https://www.unfoldingword.org/) team and the [bt-servant-engine](https://github.com/unfoldingWord/bt-servant-engine) contributors.
+This project builds on the excellent work of:
 
-The web adaptation maintains the core intelligence while making it accessible through a browser-based interface.
+- **[unfoldingWord](https://www.unfoldingword.org/)** - For the original bt-servant-engine and Bible translation resources
+- **[The Bible Project](https://bibleproject.com)** - For their outstanding biblical resources, videos, transcripts, and study materials that power the thematic search capabilities
+- **bt-servant-engine contributors** - For the core RAG engine and architecture
+
+The web adaptation maintains the core intelligence while making it accessible through a browser-based interface and enhancing it with rich biblical content from The Bible Project.
 
 ---
 
