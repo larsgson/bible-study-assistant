@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from bt_servant_engine.adapters.web_messaging import WebMessagingAdapter
-from bt_servant_engine.apps.api.dependencies import get_services
+from bt_servant_engine.apps.api.dependencies import get_service_container
 from bt_servant_engine.apps.api.message_processor import process_message
 from bt_servant_engine.core.logging import get_logger
 from bt_servant_engine.core.models import UserMessage
@@ -58,7 +58,7 @@ class ChatResponse(BaseModel):
 @router.post("/", response_model=ChatResponse, status_code=status.HTTP_200_OK)
 async def chat_endpoint(
     request: ChatRequest,
-    services: ServiceContainer = Depends(get_services),
+    services: ServiceContainer = Depends(get_service_container),
 ) -> ChatResponse:
     """Process a chat message and return assistant responses.
 
@@ -98,8 +98,9 @@ async def chat_endpoint(
         user_id=request.user_id,
         text=request.message,
         message_id=message_id,
+        message_type="text",
         timestamp=int(start_time),
-        media_id=None,
+        media_id="",
     )
 
     try:

@@ -5,8 +5,11 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from bt_servant_engine.apps.api.middleware import CorrelationIdMiddleware
 from bt_servant_engine.apps.api.routes import (
@@ -55,11 +58,26 @@ def create_app(services: ServiceContainer | None = None) -> FastAPI:
     runtime.set_services(service_container)
     app.add_middleware(CorrelationIdMiddleware)
 
+    # Mount static files for web chat interface first
+    static_dir = Path(__file__).parent.parent.parent.parent / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+        logger.info("Mounted static files from: %s", static_dir)
+
+        # Add root redirect before other routers to override health.router root
+        @app.get("/", include_in_schema=False)
+        async def root():
+            return RedirectResponse(url="/static/index.html")
+    else:
+        logger.warning("Static directory not found: %s", static_dir)
+
+    # Include routers after static files and root override
     app.include_router(health.router)
     app.include_router(admin_logs.router)
     app.include_router(admin_status_messages.router)
     app.include_router(admin_datastore.router)
     app.include_router(chat.router)
+
     return app
 
 

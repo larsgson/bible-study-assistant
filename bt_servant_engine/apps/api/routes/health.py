@@ -8,10 +8,10 @@ from ..dependencies import require_healthcheck_token
 router = APIRouter()
 
 
-@router.get("/")
-def read_root() -> dict[str, str]:
-    """Health/info endpoint with a short usage message."""
-    return {"message": "Welcome to the API. Refer to /docs for available endpoints."}
+@router.get("/health")
+async def health_check() -> JSONResponse:
+    """Simple unauthenticated health check endpoint."""
+    return JSONResponse({"status": "healthy"})
 
 
 @router.get("/alive")

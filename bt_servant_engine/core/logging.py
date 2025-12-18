@@ -12,7 +12,7 @@ from pathlib import Path
 from threading import Event, Lock
 from typing import Any, Iterator, Optional
 
-from pythonjsonlogger import jsonlogger
+from pythonjsonlogger.json import JsonFormatter
 
 from bt_servant_engine.core.config import settings
 
@@ -116,7 +116,7 @@ _handler_lock = Lock()
 _handlers_configured = Event()
 
 
-class VersionedJsonFormatter(jsonlogger.JsonFormatter):
+class CustomJSONFormatter(JsonFormatter):
     """Inject a schema version into each structured log entry."""
 
     def __init__(self, *args, schema_version: str, **kwargs) -> None:
@@ -261,7 +261,7 @@ def _ensure_handlers() -> None:
         if _handlers_configured.is_set():
             return
 
-        formatter = VersionedJsonFormatter(
+        formatter = CustomJSONFormatter(
             " ".join(
                 [
                     "%(asctime)s",

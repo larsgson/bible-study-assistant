@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     TRANSLATION_HELPS_VERSE_LIMIT: int = Field(default=5)
     RETRIEVE_SCRIPTURE_VERSE_LIMIT: int = Field(default=120)
     TRANSLATE_SCRIPTURE_VERSE_LIMIT: int = Field(default=120)
+    MAX_RESPONSE_TEXT_LENGTH: int = Field(default=50000)  # Web chat has no WhatsApp limits
     ADMIN_API_TOKEN: str | None = Field(default=None)
     HEALTHCHECK_API_TOKEN: str | None = Field(default=None)
     ENABLE_ADMIN_AUTH: bool = Field(default=True)

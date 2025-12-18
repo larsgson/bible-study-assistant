@@ -386,10 +386,14 @@ async def _handle_processing_failure(context: _MessageProcessingContext) -> None
             )
         }
         fallback_msg = status_messages.get_status_message(
-            status_messages.GENERIC_ERROR,
+            status_messages.PROCESSING_ERROR,
             fallback_state,
         )
-        fallback_text = fallback_msg.get("text", "An error occurred. Please try again.")
+        fallback_text = (
+            fallback_msg
+            if isinstance(fallback_msg, str)
+            else fallback_msg.get("text", "An error occurred. Please try again.")
+        )
         await context.messaging.send_text_message(
             context.user_message.user_id,
             fallback_text,

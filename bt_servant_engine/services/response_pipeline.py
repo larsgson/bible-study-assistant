@@ -18,6 +18,8 @@ from bt_servant_engine.services.openai_utils import track_openai_usage
 from bt_servant_engine.services.preprocessing import detect_language as detect_language_impl
 from bt_servant_engine.services.response_helpers import (
     normalize_single_response as normalize_single_response_impl,
+)
+from bt_servant_engine.services.response_helpers import (
     sample_for_language_detection as sample_for_language_detection_impl,
 )
 from utils import chop_text, combine_chunks
@@ -347,7 +349,7 @@ def needs_chunking(state: dict[str, Any]) -> str:
         logger.info("[chunk-check] no text responses to send; skipping chunking")
         return END
     first_response = responses[0]
-    if len(first_response) > config.MAX_META_TEXT_LENGTH:
+    if len(first_response) > config.MAX_RESPONSE_TEXT_LENGTH:
         logger.warning("message to big: %d chars. preparing to chunk.", len(first_response))
         return "chunk_message_node"
     return END
