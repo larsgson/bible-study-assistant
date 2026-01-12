@@ -333,7 +333,7 @@ def query_open_ai(
     ).hexdigest()
     model_name = dependencies.model_for_agentic_strength(
         payload.agentic_strength,
-        allow_low=False,
+        allow_low=True,
         allow_very_low=True,
     )
     cache_key = FinalResponseCacheKey(

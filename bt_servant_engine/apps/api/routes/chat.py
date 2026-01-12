@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from bt_servant_engine.adapters.web_messaging import WebMessagingAdapter
 from bt_servant_engine.apps.api.dependencies import get_service_container
@@ -19,6 +20,9 @@ from bt_servant_engine.services import ServiceContainer
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
+
+# Rate limiter instance
+limiter = Limiter(key_func=get_remote_address)
 
 
 class ChatRequest(BaseModel):
@@ -56,8 +60,10 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/", response_model=ChatResponse, status_code=status.HTTP_200_OK)
+@limiter.limit("5/hour")
 async def chat_endpoint(
-    request: ChatRequest,
+    request: Request,
+    chat_request: ChatRequest,
     services: ServiceContainer = Depends(get_service_container),
 ) -> ChatResponse:
     """Process a chat message and return assistant responses.
@@ -80,10 +86,11 @@ async def chat_endpoint(
     message_id = str(uuid.uuid4())
 
     logger.info(
-        "Web chat request received: user_id=%s, message_id=%s, session=%s",
-        request.user_id,
+        "Web chat request received: user_id=%s, message_id=%s, session=%s, ip=%s",
+        chat_request.user_id,
         message_id,
-        request.session_id,
+        chat_request.session_id,
+        get_remote_address(request),
     )
 
     web_adapter = WebMessagingAdapter()
@@ -95,8 +102,8 @@ async def chat_endpoint(
     )
 
     user_message = UserMessage(
-        user_id=request.user_id,
-        text=request.message,
+        user_id=chat_request.user_id,
+        text=chat_request.message,
         message_id=message_id,
         message_type="text",
         timestamp=int(start_time),
@@ -120,24 +127,24 @@ async def chat_endpoint(
 
         logger.info(
             "Web chat response sent: user_id=%s, message_id=%s, responses=%d, time=%.2fs",
-            request.user_id,
+            chat_request.user_id,
             message_id,
             len(responses),
             processing_time,
         )
 
         return ChatResponse(
-            user_id=request.user_id,
+            user_id=chat_request.user_id,
             message_id=message_id,
             responses=responses,
             processing_time_seconds=round(processing_time, 3),
-            session_id=request.session_id,
+            session_id=chat_request.session_id,
         )
 
     except Exception as exc:
         logger.error(
             "Web chat processing failed: user_id=%s, message_id=%s, error=%s",
-            request.user_id,
+            chat_request.user_id,
             message_id,
             str(exc),
             exc_info=True,

@@ -48,15 +48,9 @@ dist/
 venv/Lib/site-packages/chromadb/proto/*_pb2.py*
 venv/Lib/site-packages/chromadb/proto/*_pb2_grpc.py
 
-# Configuration
-fly.toml
-
 # Source control junk
 .git/
 .github/
-
-# Build configuration
-Dockerfile
 
 # Other
 knowledgebase/

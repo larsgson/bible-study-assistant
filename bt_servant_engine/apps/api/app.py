@@ -10,6 +10,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from bt_servant_engine.apps.api.middleware import CorrelationIdMiddleware
 from bt_servant_engine.apps.api.routes import (
@@ -26,6 +29,9 @@ from bt_servant_engine.services.brain_orchestrator import create_brain
 from .state import get_brain, set_brain
 
 logger = get_logger(__name__)
+
+# Rate limiter: 5 requests per hour per IP address
+limiter = Limiter(key_func=get_remote_address, default_limits=["5/hour"])
 
 
 @asynccontextmanager
@@ -56,6 +62,11 @@ def create_app(services: ServiceContainer | None = None) -> FastAPI:
     service_container = services
     app.state.services = service_container
     runtime.set_services(service_container)
+
+    # Add rate limiting
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     app.add_middleware(CorrelationIdMiddleware)
 
     # Mount static files for web chat interface first

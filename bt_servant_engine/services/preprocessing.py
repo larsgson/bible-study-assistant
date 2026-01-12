@@ -649,13 +649,29 @@ def model_for_agentic_strength(
     allow_low: bool,
     allow_very_low: bool,
 ) -> str:
-    """Return GPT model name based on strength and allowed downgrades."""
-    allowed: set[str] = set()
-    if allow_low:
-        allowed.add("low")
-    if allow_very_low:
-        allowed.add("very_low")
-    return "gpt-4o-mini" if agentic_strength in allowed else "gpt-4o"
+    """Return GPT model name based on strength and allowed downgrades.
+
+    Returns gpt-4o-mini for normal/low/very_low unless disallowed.
+    Returns gpt-4o only for high/very_high strength settings.
+    """
+    # Use gpt-4o only for explicitly high strength
+    if agentic_strength in ("high", "very_high"):
+        return "gpt-4o"
+
+    # For normal strength, respect allow_low flag
+    if agentic_strength == "normal" and not allow_low:
+        return "gpt-4o"
+
+    # For low strength, respect allow_low flag
+    if agentic_strength == "low" and not allow_low:
+        return "gpt-4o"
+
+    # For very_low strength, respect allow_very_low flag
+    if agentic_strength == "very_low" and not allow_very_low:
+        return "gpt-4o"
+
+    # Default to gpt-4o-mini for all other cases (normal, low, very_low when allowed)
+    return "gpt-4o-mini"
 
 
 # ========== MAIN FUNCTIONS ==========
@@ -682,9 +698,8 @@ def detect_language(client: OpenAI, text: str, *, agentic_strength: Optional[str
     strength = str(strength_source).lower()
     if strength not in ALLOWED_AGENTIC_STRENGTH:
         strength = "normal"
-    model_name = model_for_agentic_strength(strength, allow_low=True, allow_very_low=True)
     response = client.responses.parse(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         instructions=DETECT_LANGUAGE_AGENT_SYSTEM_PROMPT,
         input=cast(Any, messages),
         text_format=MessageLanguage,
@@ -692,7 +707,7 @@ def detect_language(client: OpenAI, text: str, *, agentic_strength: Optional[str
         store=False,
     )
     usage = getattr(response, "usage", None)
-    track_openai_usage(usage, model_name, _extract_cached_input_tokens, add_tokens)
+    track_openai_usage(usage, "gpt-4o-mini", _extract_cached_input_tokens, add_tokens)
     message_language = cast(MessageLanguage | None, response.output_parsed)
     predicted = message_language.language if message_language else "en"
     logger.info("language detection (model): %s", predicted)
@@ -771,10 +786,10 @@ def determine_intents(client: OpenAI, query: str) -> list[IntentType]:
         },
     ]
     response = client.responses.parse(
-        model="gpt-4o", input=cast(Any, messages), text_format=UserIntents, store=False
+        model="gpt-4o-mini", input=cast(Any, messages), text_format=UserIntents, store=False
     )
     usage = getattr(response, "usage", None)
-    track_openai_usage(usage, "gpt-4o", _extract_cached_input_tokens, add_tokens)
+    track_openai_usage(usage, "gpt-4o-mini", _extract_cached_input_tokens, add_tokens)
     user_intents_model = cast(UserIntents, response.output_parsed)
     logger.info(
         "extracted user intents: %s", " ".join([i.value for i in user_intents_model.intents])
@@ -852,13 +867,13 @@ def determine_intents_structured(
 
     try:
         response = client.responses.parse(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             input=cast(Any, messages),
             text_format=UserIntentsStructured,
             store=False,
         )
         usage = getattr(response, "usage", None)
-        track_openai_usage(usage, "gpt-4o", _extract_cached_input_tokens, add_tokens)
+        track_openai_usage(usage, "gpt-4o-mini", _extract_cached_input_tokens, add_tokens)
 
         structured_intents = cast(UserIntentsStructured, response.output_parsed)
         provided_by_model: dict[IntentType, str] = {}
@@ -1033,14 +1048,14 @@ def preprocess_user_query(
         },
     ]
     response = client.responses.parse(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         instructions=PREPROCESSOR_AGENT_SYSTEM_PROMPT,
         input=cast(Any, messages),
         text_format=PreprocessorResult,
         store=False,
     )
     usage = getattr(response, "usage", None)
-    track_openai_usage(usage, "gpt-4o", _extract_cached_input_tokens, add_tokens)
+    track_openai_usage(usage, "gpt-4o-mini", _extract_cached_input_tokens, add_tokens)
     preprocessor_result = cast(PreprocessorResult | None, response.output_parsed)
     if preprocessor_result is None:
         new_message = query
