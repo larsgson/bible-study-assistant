@@ -26,6 +26,15 @@ logs/
 # Ignore the data folder entirely (mounted volume)
 data/
 
+# Large folders to exclude from build context
+example-pdfs/
+examples/
+temp_docs/
+temp_scripts/
+visualizations/
+imports/
+sources/
+
 # Docker stuff (optional)
 *.pid
 *.bak
@@ -56,3 +65,12 @@ venv/Lib/site-packages/chromadb/proto/*_pb2_grpc.py
 knowledgebase/
 README.md
 env.example
+
+# Documentation and markdown
+*.md
+docs/
+
+# Test files
+tests/
+*.test.py
+test_*.py

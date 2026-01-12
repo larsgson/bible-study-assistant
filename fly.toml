@@ -3,8 +3,10 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'bt-servant'
+app = 'bs-assistant'
 primary_region = 'iad'
+
+[build]
 
 [env]
   DATA_DIR = "/data"
