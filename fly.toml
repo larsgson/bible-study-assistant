@@ -6,8 +6,6 @@
 app = 'bt-servant'
 primary_region = 'iad'
 
-[build]
-
 [env]
   DATA_DIR = "/data"
 

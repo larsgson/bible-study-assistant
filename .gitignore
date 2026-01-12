@@ -49,3 +49,4 @@ imports/tbp/files/
 imports/tbp/metadata/
 scripts/imports/
 example-pdfs/
+Dockerfile.backup
