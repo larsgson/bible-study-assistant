@@ -1,11 +1,10 @@
 """Web chat API route for bible study assistant."""
 
-from __future__ import annotations
-
 import time
 import uuid
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -33,7 +32,7 @@ class ChatRequest(BaseModel):
         default_factory=lambda: str(uuid.uuid4()),
         description="Unique user identifier for session continuity",
     )
-    session_id: str | None = Field(
+    session_id: Optional[str] = Field(
         default=None,
         description="Optional session identifier for grouping conversations",
     )
@@ -63,7 +62,7 @@ class ChatResponse(BaseModel):
 @limiter.limit("5/hour")
 async def chat_endpoint(
     request: Request,
-    chat_request: ChatRequest,
+    chat_request: Annotated[ChatRequest, Body(embed=False)],
     services: ServiceContainer = Depends(get_service_container),
 ) -> ChatResponse:
     """Process a chat message and return assistant responses.

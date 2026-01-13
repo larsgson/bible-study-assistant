@@ -33,7 +33,11 @@ temp_docs/
 temp_scripts/
 visualizations/
 imports/
-sources/
+
+# Include sources/bible_data and translation_helps but exclude other source files
+sources/*
+!sources/bible_data/
+!sources/translation_helps/
 
 # Docker stuff (optional)
 *.pid

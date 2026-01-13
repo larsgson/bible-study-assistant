@@ -12,7 +12,12 @@ from pathlib import Path
 from threading import Event, Lock
 from typing import Any, Iterator, Optional
 
-from pythonjsonlogger import jsonlogger
+try:
+    from pythonjsonlogger.json import JsonFormatter
+except (ImportError, ModuleNotFoundError):
+    from pythonjsonlogger import jsonlogger
+
+    JsonFormatter = jsonlogger.JsonFormatter
 
 from bt_servant_engine.core.config import settings
 
@@ -116,7 +121,7 @@ _handler_lock = Lock()
 _handlers_configured = Event()
 
 
-class CustomJSONFormatter(jsonlogger.JsonFormatter):
+class CustomJSONFormatter(JsonFormatter):
     """Inject a schema version into each structured log entry."""
 
     def __init__(self, *args, schema_version: str, **kwargs) -> None:

@@ -33,6 +33,9 @@ db/data/
 logs/
 .coverage
 
+# Generated exports for deployment (regenerate locally before deploying)
+exports/
+
 # node stuff
 node_modules/
 package.json
