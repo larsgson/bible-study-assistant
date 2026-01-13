@@ -8,12 +8,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
+from slowapi.middleware import SlowAPIMiddleware
+from starlette.requests import Request
 
+from bt_servant_engine.apps.api.limiter import limiter
 from bt_servant_engine.apps.api.middleware import CorrelationIdMiddleware
 from bt_servant_engine.apps.api.routes import (
     admin_datastore,
@@ -30,8 +31,19 @@ from .state import get_brain, set_brain
 
 logger = get_logger(__name__)
 
-# Rate limiter: 5 requests per hour per IP address
-limiter = Limiter(key_func=get_remote_address, default_limits=["5/hour"])
+
+def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """Custom handler for rate limit exceeded errors with better user messaging."""
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": "Rate limit exceeded",
+            "detail": "You have exceeded the rate limit of 10 requests per hour. Please try again later. This is a demo environment with strict rate limiting. Contact support for higher limits.",
+            "message": "You have exceeded the rate limit of 10 requests per hour. Please try again later. This is a demo environment with strict rate limiting. Contact support for higher limits.",
+            "limit": "10 per hour",
+            "retry_after": "1 hour",
+        },
+    )
 
 
 @asynccontextmanager
@@ -65,9 +77,10 @@ def create_app(services: ServiceContainer | None = None) -> FastAPI:
 
     # Add rate limiting
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 
     app.add_middleware(CorrelationIdMiddleware)
+    app.add_middleware(SlowAPIMiddleware)
 
     # Mount static files for web chat interface first
     static_dir = Path(__file__).parent.parent.parent.parent / "static"

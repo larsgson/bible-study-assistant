@@ -102,3 +102,57 @@ def load_book_titles(data_root: Path) -> Dict[str, str]:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001 - tolerate malformed files  # pylint: disable=broad-except
         return {}
+
+
+def parse_reference_simple(ref_text: str) -> Optional[Dict[str, any]]:
+    """Parse Bible reference into basic components.
+
+    Examples:
+        "Gen 3:15" → {"book": "gen", "chapter": 3, "verse": 15}
+        "John 3:16" → {"book": "joh", "chapter": 3, "verse": 16}
+        "Psalm 119:105" → {"book": "psa", "chapter": 119, "verse": 105}
+
+    Returns:
+        Dict with book, chapter, verse or None if parsing fails
+    """
+    import re
+
+    # Basic pattern for Book Chapter:Verse
+    pattern = r"(\d?\s*[A-Za-z]+)\s+(\d+):(\d+)"
+    match = re.search(pattern, ref_text)
+
+    if not match:
+        return None
+
+    book_raw = match.group(1).strip().lower()
+
+    # Simple book normalization (minimal set)
+    book_map = {
+        "genesis": "gen",
+        "gen": "gen",
+        "exodus": "exo",
+        "exo": "exo",
+        "matthew": "mat",
+        "mat": "mat",
+        "john": "joh",
+        "joh": "joh",
+        "psalm": "psa",
+        "psalms": "psa",
+        "psa": "psa",
+        "1 john": "1jo",
+        "1jo": "1jo",
+        "2 john": "2jo",
+        "2jo": "2jo",
+        "3 john": "3jo",
+        "3jo": "3jo",
+    }
+
+    book = book_map.get(book_raw, book_raw[:3] if len(book_raw) >= 3 else book_raw)
+    chapter = int(match.group(2))
+    verse = int(match.group(3))
+
+    return {
+        "book": book,
+        "chapter": chapter,
+        "verse": verse,
+    }

@@ -3,6 +3,9 @@ build/
 dist/
 *.egg-info/
 
+# Generated/enriched data
+sources/bible_data_enriched/
+
 # Byte-compiled / cache
 __pycache__/
 *.py[cod]

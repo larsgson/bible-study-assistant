@@ -37,6 +37,7 @@ imports/
 # Include sources/bible_data and translation_helps but exclude other source files
 sources/*
 !sources/bible_data/
+!sources/bible_data_enriched/
 !sources/translation_helps/
 
 # Docker stuff (optional)

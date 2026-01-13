@@ -6,11 +6,10 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from bt_servant_engine.adapters.web_messaging import WebMessagingAdapter
 from bt_servant_engine.apps.api.dependencies import get_service_container
+from bt_servant_engine.apps.api.limiter import limiter
 from bt_servant_engine.apps.api.message_processor import process_message
 from bt_servant_engine.core.logging import get_logger
 from bt_servant_engine.core.models import UserMessage
@@ -19,9 +18,6 @@ from bt_servant_engine.services import ServiceContainer
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
-
-# Rate limiter instance
-limiter = Limiter(key_func=get_remote_address)
 
 
 class ChatRequest(BaseModel):
@@ -59,7 +55,7 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/", response_model=ChatResponse, status_code=status.HTTP_200_OK)
-@limiter.limit("5/hour")
+@limiter.limit("10/hour")
 async def chat_endpoint(
     request: Request,
     chat_request: Annotated[ChatRequest, Body(embed=False)],
@@ -71,8 +67,11 @@ async def chat_endpoint(
     it through the bible study assistant's RAG engine and intent routing system.
     The same brain/orchestration logic used for WhatsApp is reused here.
 
+    Rate limited to 10 requests per hour per IP address.
+
     Args:
-        request: The chat request containing the user's message
+        request: The FastAPI request object
+        chat_request: The chat request containing the user's message
         services: Injected service container with adapters
 
     Returns:
@@ -80,6 +79,7 @@ async def chat_endpoint(
 
     Raises:
         HTTPException: If processing fails
+        RateLimitExceeded: If rate limit is exceeded (handled by custom handler)
     """
     start_time = time.time()
     message_id = str(uuid.uuid4())
@@ -89,7 +89,7 @@ async def chat_endpoint(
         chat_request.user_id,
         message_id,
         chat_request.session_id,
-        get_remote_address(request),
+        request.client.host if request.client else "unknown",
     )
 
     web_adapter = WebMessagingAdapter()

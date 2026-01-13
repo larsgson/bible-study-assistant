@@ -372,9 +372,8 @@ def determine_intents(state: Any) -> dict:
     1. Check for queued intents first (user continuing from previous request)
     2. If queue exists, use LLM to check if user is responding affirmatively
     3. If affirmative, use queued intent; if not, clear queue and detect new intent
-    4. If no queue, detect intents using simple classification
-    5. If multiple intents detected, use structured extraction for parameter disambiguation
-    6. If single intent, skip extraction (whole query is context - no need for LLM overhead)
+    4. If no queue, use PATTERN-BASED inference (no LLM)
+    5. Single intent flow (multi-intent detection removed for simplicity)
     """
     s = _brain_state(state)
     query = s["transformed_query"]
@@ -382,22 +381,25 @@ def determine_intents(state: Any) -> dict:
     if queued_result:
         return queued_result
 
-    logger.info("[determine-intents] Detecting intents from query: %s", query[:100])
-    user_intents = _determine_intents_impl(open_ai_client, query)
+    logger.info("[determine-intents] Pattern-based inference for query: %s", query[:100])
 
-    if len(user_intents) > 1:
-        return _handle_multiple_detected_intents(s, query, user_intents)
+    # Use pattern-based inference (no LLM) - saves ~$0.002 per query
+    from bt_servant_engine.services.intent_inference_pattern import determine_intents_pattern_based
 
-    # Single intent - no extraction needed, whole query is context
+    user_intents, confidence = determine_intents_pattern_based(query)
+
     logger.info(
-        "[determine-intents] Single intent detected=%s; skipping parameter extraction",
+        "[determine-intents] Pattern-based result: intent=%s confidence=%.2f (LLM call avoided)",
         user_intents[0].value if user_intents else "none",
+        confidence,
     )
+
     context_map_single = {user_intents[0].value: query} if user_intents else {}
     return {
         "user_intents": user_intents,
         "intent_context_map": context_map_single,
-        # Handlers derive context directly from the transformed query
+        "inference_method": "pattern",
+        "confidence": confidence,
     }
 
 
