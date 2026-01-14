@@ -36,8 +36,9 @@ db/data/
 logs/
 .coverage
 
-# Generated exports for deployment (regenerate locally before deploying)
+# Local only
 exports/
+previous/
 
 # node stuff
 node_modules/

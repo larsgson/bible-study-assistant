@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bt-servant-engine"
-version = "1.4.7"
-description = "BT Servant Engine — strict onion/hexagonal refactor baseline"
+name = "bs-assistant"
+version = "2.0.0"
+description = "Bible Study Assistant — RAG-based conversational assistant for Bible translation"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "unfoldingWord", email = "info@unfoldingword.org" }]
@@ -17,9 +17,10 @@ dependencies = [
   "pydantic-settings>=2.3",
   "openai>=1.76",
   "httpx>=0.28",
-  "langgraph>=0.6",
   "chromadb>=1.0",
   "tinydb>=4.8",
+  "tiktoken>=0.7",
+  "sentence-transformers>=2.2",
   "typing-extensions>=4.12",
   "python-json-logger>=2.0.7",
   "translation-helps-mcp-client>=1.2.0",
@@ -45,7 +46,7 @@ dev = [
 license-files = []
 
 [tool.setuptools.packages.find]
-include = ["bt_servant_engine*"]
+include = ["bs_assistant*"]
 exclude = [
   "tests*",
   "scripts*",
@@ -54,6 +55,7 @@ exclude = [
   "data*",
   "docs*",
   "logs*",
+  "previous*",
 ]
 
 [tool.ruff]
@@ -93,8 +95,8 @@ testpaths = ["tests"]
 
 [tool.deptry]
 ignore_notebooks = true
-exclude = ["venv", ".venv", "build", "dist", "tests"]
-known_first_party = ["bt_servant_engine"]
+exclude = ["venv", ".venv", "build", "dist", "tests", "previous"]
+known_first_party = ["bs_assistant"]
 pep621_dev_dependency_groups = ["dev"]
 # Uvicorn is invoked via CLI entrypoint rather than imported.
 [tool.deptry.per_rule_ignores]

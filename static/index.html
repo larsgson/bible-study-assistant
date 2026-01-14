@@ -415,7 +415,7 @@
             showTypingIndicator();
 
             try {
-                const response = await fetch('/api/chat/', {
+                const response = await fetch('/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -423,7 +423,8 @@
                     body: JSON.stringify({
                         message: message,
                         user_id: userId,
-                        session_id: sessionId
+                        session_id: sessionId,
+                        language: 'en'
                     })
                 });
 
@@ -436,10 +437,8 @@
 
                 const data = await response.json();
 
-                if (data.responses && data.responses.length > 0) {
-                    data.responses.forEach(resp => {
-                        addMessage(resp.content, false);
-                    });
+                if (data.response) {
+                    addMessage(data.response, false);
                 } else {
                     addMessage("I received your message but don't have a response.", false);
                 }
