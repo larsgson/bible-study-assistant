@@ -109,23 +109,36 @@ class Retriever:
         else:
             verses = []
 
-        # Convert to resources
-        for verse in verses:
-            resources.append(
-                RetrievedResource(
-                    type="verse",
-                    content=verse["text"],
-                    reference=verse["reference"],
-                    score=1.0,  # Direct match = highest score
-                    metadata={
-                        "book": verse.get("book"),
-                        "chapter": verse.get("chapter"),
-                        "verse": verse.get("verse"),
-                        "translation": verse.get("translation"),
-                        "language": verse.get("language"),
-                    },
-                )
+        if not verses:
+            return resources
+
+        # Consolidate verses into a single passage block
+        first = verses[0]
+        last = verses[-1]
+        if len(verses) == 1:
+            passage_ref = first["reference"]
+        else:
+            passage_ref = f"{first['reference']}–{last['reference']}"
+
+        passage_text = "\n".join(v["text"] for v in verses)
+
+        resources.append(
+            RetrievedResource(
+                type="verse",
+                content=passage_text,
+                reference=passage_ref,
+                score=0.95,
+                metadata={
+                    "book": first.get("book"),
+                    "chapter": first.get("chapter"),
+                    "verse_start": first.get("verse"),
+                    "verse_end": last.get("verse"),
+                    "translation": first.get("translation"),
+                    "language": first.get("language"),
+                    "verse_count": len(verses),
+                },
             )
+        )
 
         return resources
 
